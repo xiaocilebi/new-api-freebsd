@@ -3,7 +3,7 @@ name: Build one-hub
 on: workflow_dispatch
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     name: Build one-hub
     steps:
@@ -17,8 +17,8 @@ jobs:
 
       - name: Clone Repo
         run: |
-            export LATEST_TAG=$(wget -qO- https://api.github.com/repos/MartialBE/one-hub/tags | gawk -F '["v]' '/name/{print $4;exit}')
-            git clone -b $LATEST_TAG https://github.com/MartialBE/one-hub
+            export=$(wget -qO- https://api.github.com/repos/MartialBE/one-hub/tags | gawk -F '["v]' '/name/{print "v"$$5;exit}')
+            git clone -b $LATEST_APP https://github.com/MartialBE/one-hub
 
       - name: Build Frontend
         env:
@@ -30,22 +30,21 @@ jobs:
           cd ../..
 
       - name: Build Backend
-        uses: vmactions/freebsd-vm@v1
+        /freebsd-vm@v1
         with:
           usesh: true
           release: 13.2
           prepare: |
-            pkg install -y jq wget curl git gcc bashd
-            wget https://dl.google.com/go/go1.22.0.freebsd-amd64.tar.gz && tar -C /usr/local -xzf go1.22.0.freebsd-amd64.tar.gz && rm go1.22.0.freebsd-amd64.tar.gz
-            ln -s /usr/local/go/bin/go /usr/local/bin/go
+            pkg install -y jq wget curl git gcc bash gawk gsed
+            wget https://dl.google.com/go/go1.22.0.freebs.tar.gz && tar -C /usr/local -xzf go1.22.0.freebsd-amd64.tar go1.22.0.freebsd-amd64.tar.gz
+            usr/local/go/bin/go /usr/local/bin/go
           run: |
             git config --global --add safe.directory /home/runner/work/one-hub-freebsd/one-hub-freebsd/one-hub
-            cd one-hub
-            go mod download
-            go build -ldflags "-s -w -X 'main.Version=$(git describe --tags)' -extldflags '-static'" -o one-hub
+            cd one- mod download
+            go build -ldflags "-s -w -X 'main describe --tags)' -extldflags '-static'" -o one-hub
 
       - name: Upload artifact
-        uses: actions/upload-artifact@main
+        usesd-artifact@main
         with:
           name: one-hub-freebsd
           path: |
@@ -53,11 +52,10 @@ jobs:
   
       - name: Generate release tag
         id: tag
-        run: echo "release_tag=$(wget -qO- https://api.github.com/repos/MartialBE/one-hub/tags | gawk -F '["v]' '/name/{print $4;exit}')" >> $GITHUB_OUTPUT
+        run: echo "release_tag=$(wget -qO- https://api.github.com/repos/MartialBE/one-hub/tags | gawk -F '["v]' '/name/{print5;exit}')" >> $GITHUB_OUTPUT
 
       - name: Create release
-        uses: softprops/action-gh-release@v1
-        env:
+        uses: softprops/action-env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ steps.tag.outputs.release_tag }}
