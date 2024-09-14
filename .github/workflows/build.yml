@@ -1,11 +1,13 @@
-name: Build one-hub
+name: Build new-api
 
 on: workflow_dispatch
 
 jobs:
-  build:
-    runs-on: ubuntuname: Build one-hub
+  test:
+    runs-on: ubuntu-latest
+    name: Build new-api
     steps:
+    
       - uses: actions/checkout@v4
     
       - name: Set up Node.js
@@ -15,14 +17,14 @@ jobs:
 
       - name: Clone Repo
         run: |
-            export LATEST_TAG=$(wget -qO- https://api.github.com/repos/MartialBE/one-hub/tags | gawk -F '["v]' '/name/{print $4;exit}')
-            git clone -b v$LATEST_TAG https://github.com/MartialBE/one-hub
+            export LATEST_APP=$(wget -qO- https://api.github.com/repos/Calcium-Ion/new-api/tags | gawk -F '["v]' '/name/{print "v"$5;exit}')
+            git clone -b $LATEST_APP https://github.com/Calcium-Ion/new-api
 
       - name: Build Frontend
         env:
           CI: ""
         run: |
-          cd one-hub/web
+          cd new-api/web
           npm install
           REACT_APP_VERSION=$(git describe --tags) npm run build
           cd ../..
@@ -33,36 +35,40 @@ jobs:
           usesh: true
           release: 13.2
           prepare: |
-            pkg install -y jq wget curl git gcc bashd
-            wget https://dl.google.com/go/go1.22.0.freebsd-amd64.tar.gz && tar -C /usr/local -xzf go1.22.0.freebsd-amd64.tar.gz && rm go1.22.0.freebs.tar.gz
+            pkg install -y jq wget curl git gcc bash gawk gsed
+            wget https://dl.google.com/go/go1.22.0.freebsd-amd64.tar.gz && tar -C /usr/local -xzf go1.22.0.freebsd-amd64.tar.gz && rm go1.22.0.freebsd-amd64.tar.gz
             ln -s /usr/local/go/bin/go /usr/local/bin/go
+          # curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          # echo '. $HOME/.cargo/env' >> ~/.bashrc
+          # . "$HOME/.cargo/env"
           run: |
-            git config --global --add safe.directory /home/runner/work/one-hub-freebsd/one-hub-freebsd/one-hub
-            cd one-hub
+            git config --global --add safe.directory /home/runner/work/new-api-freebsd/new-api-freebsd/new-api
+            cd new-api
             go mod download
-            go build -ldflags "-s -w -X 'main.Version=$(git describe --tags)' -extldflags '-static'" -o one-hub
+            go build -ldflags "-s -w -X 'one-api/common.Version=$(git describe --tags)' -extldflags '-static'" -o new-api
 
       - name: Upload artifact
         uses: actions/upload-artifact@main
         with:
-          name: one-hub-freebsd
+          name: new-api-freebsd
           path: |
-              one-hub/one-hub
+              new-api/new-api
   
       - name: Generate release tag
         id: tag
-        run: echo "release_tag=$(wget -qO- https://api.github.com/repos/MartialBE/one-hub/tags | gawk -F '["v]' '/name/{print $4;exit}')" >> $GITHUB_OUTPUT
+        run: echo "release_tag=$(wget -qO- https://api.github.com/repos/Calcium-Ion/new-api/tags | gawk -F '["v]' '/name/{print "v"$5;exit}')" >> $GITHUB_OUTPUT
 
       - name: Create release
-        uses: softprops/action-gh1
+        uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ steps.tag.outputs.release_tag }}
-          files: |hub/one-hub
+          files: |
+                new-api/new-api
               
       - name: Delete workflow runs
-        uses: Mattraks/runs@v2
+        uses: Mattraks/delete-workflow-runs@v2
         with:
           token: ${{ github.token }}
           repository: ${{ github.repository }}
