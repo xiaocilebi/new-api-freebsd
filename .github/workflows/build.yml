@@ -1,11 +1,11 @@
-name: Build new-api
+name: Build one-hub
 
 on: workflow_dispatch
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    name: Build new-api
+    name: Build one-hub
     steps:
     
       - uses: actions/checkout@v4
@@ -24,7 +24,7 @@ jobs:
         env:
           CI: ""
         run: |
-          cd new-api/web
+          cd one-hub/web
           npm install
           REACT_APP_VERSION=$(git describe --tags) npm run build
           cd ../..
@@ -42,17 +42,17 @@ jobs:
           # echo '. $HOME/.cargo/env' >> ~/.bashrc
           # . "$HOME/.cargo/env"
           run: |
-            git config --global --add safe.directory /home/runner/work/new-api-freebsd/new-api-freebsd/new-api
-            cd new-api
+            git config --global --add safe.directory /home/runner/work/one-hub-freebsd/one-hub-freebsd/one-hub
+            cd one-hub
             go mod download
-            go build -ldflags "-s -w -X 'one-api/common.Version=$(git describe --tags)' -extldflags '-static'" -o new-api
+            go build -ldflags "-s -w -X 'one-api/common.Version=$(git describe --tags)' -extldflags '-static'" -o one-hub
 
       - name: Upload artifact
         uses: actions/upload-artifact@main
         with:
-          name: new-api-freebsd
+          name: one-hub-freebsd
           path: |
-              new-api/new-api
+              one-hub/one-hub
   
       - name: Generate release tag
         id: tag
@@ -65,7 +65,7 @@ jobs:
         with:
           tag_name: ${{ steps.tag.outputs.release_tag }}
           files: |
-                new-api/new-api
+                one-hub/one-hub
               
       - name: Delete workflow runs
         uses: Mattraks/delete-workflow-runs@v2
